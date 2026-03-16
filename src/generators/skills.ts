@@ -4,12 +4,20 @@
  * Creates .claude/skills/<skill-name>/SKILL.md stub files for each skill
  * defined in the specops config. Existing SKILL.md files are never
  * overwritten — they are owned by the user after initial generation.
+ *
+ * Framework-owned skills (feature-workspace, specops-scan) are always
+ * overwritten on every `specops update` run. They are managed by specops
+ * and should not be edited manually.
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { resolve, dirname } from "node:path";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { SpecopsConfig, SkillConfig } from "../config/schema.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Generate a SKILL.md stub for a single skill.
@@ -78,37 +86,36 @@ function formatSkillTitle(name: string): string {
 /**
  * Generate skill stubs under .claude/skills/.
  *
- * Only creates SKILL.md if it does not already exist. Existing skill files
- * are never overwritten — they are user-owned content.
+ * User-owned skills: only created if SKILL.md does not already exist.
+ * Framework-owned skills (feature-workspace, specops-scan): always
+ * overwritten on every run.
  *
  * @param projectDir — Project root directory.
  * @param config — Parsed specops config.
- * @returns List of absolute paths of files created (not updated).
+ * @returns List of absolute paths of files created or updated.
  */
 export async function generateSkills(
   projectDir: string,
   config: SpecopsConfig
 ): Promise<string[]> {
-  if (!config.skills || config.skills.skills.length === 0) {
-    return [];
-  }
-
   const created: string[] = [];
 
-  for (const skill of config.skills.skills) {
-    const skillDir = resolve(projectDir, ".claude", "skills", skill.name);
-    await mkdir(skillDir, { recursive: true });
+  // Generate user-defined skill stubs (only if missing).
+  if (config.skills && config.skills.skills.length > 0) {
+    for (const skill of config.skills.skills) {
+      const skillDir = resolve(projectDir, ".claude", "skills", skill.name);
+      await mkdir(skillDir, { recursive: true });
 
-    const skillPath = resolve(skillDir, "SKILL.md");
-    if (!existsSync(skillPath)) {
-      const content = generateSkillStub(skill);
-      await writeFile(skillPath, content, "utf-8");
-      created.push(skillPath);
+      const skillPath = resolve(skillDir, "SKILL.md");
+      if (!existsSync(skillPath)) {
+        const content = generateSkillStub(skill);
+        await writeFile(skillPath, content, "utf-8");
+        created.push(skillPath);
+      }
     }
   }
 
-  // Also generate the feature-workspace skill if it does not exist,
-  // since ExecPlans are a core specops concept.
+  // Framework-owned: feature-workspace (created only if missing).
   const featureWorkspaceDir = resolve(
     projectDir,
     ".claude",
@@ -124,7 +131,63 @@ export async function generateSkills(
     created.push(fwPath);
   }
 
+  // Framework-owned: specops-scan (always overwritten — never user-edited).
+  const scanDir = resolve(projectDir, ".claude", "skills", "specops-scan");
+  await mkdir(scanDir, { recursive: true });
+
+  const scanPath = resolve(scanDir, "SKILL.md");
+  const scanContent = await loadScanSkillTemplate();
+  await writeFile(scanPath, scanContent, "utf-8");
+  created.push(scanPath);
+
   return created;
+}
+
+/**
+ * Load the scan skill template from the bundled templates directory.
+ *
+ * At runtime, __dirname is dist/generators/. We walk up two levels to the
+ * package root and then into src/templates/ — the same pattern used by the
+ * CLAUDE.md generator. The src/templates/ directory is shipped in the npm
+ * package via the "files" field in package.json.
+ */
+async function loadScanSkillTemplate(): Promise<string> {
+  const packageRoot = resolve(__dirname, "..", "..");
+  const templatePath = resolve(packageRoot, "src", "templates", "scan-skill.md");
+  try {
+    return await readFile(templatePath, "utf-8");
+  } catch {
+    // Fallback: generate a minimal stub so the skill is always present.
+    return generateScanSkillFallback();
+  }
+}
+
+/**
+ * Minimal fallback scan skill content used when the template file cannot be
+ * found (e.g., during development before the first build).
+ */
+function generateScanSkillFallback(): string {
+  return [
+    "---",
+    'name: "specops-scan"',
+    'description: "Bootstrap specops.yaml by analyzing the codebase automatically."',
+    "---",
+    "",
+    "# Specops Scan",
+    "",
+    "Analyze this codebase and generate a complete `specops.yaml` configuration.",
+    "",
+    "Run this skill to bootstrap specops governance for a new project.",
+    "",
+    "## Steps",
+    "",
+    "1. Read package manifests to identify the tech stack",
+    "2. Analyze directory structure to map component boundaries",
+    "3. Read existing docs and conventions",
+    "4. Recommend appropriate agent roles",
+    "5. Write `specops.yaml` with discovered configuration",
+    "6. Tell the user to run `specops update`",
+  ].join("\n");
 }
 
 /**

@@ -34,15 +34,34 @@ AI coding agents are powerful but chaotic. Without structure, they:
 # Install globally
 pnpm add -g specops
 
-# Initialize in your project
+# In your project: install the scan skill
 cd your-project
 specops init
+```
 
-# After editing specops.yaml, regenerate files
+Then open your AI tool (Claude Code, Cursor, etc.) and run:
+
+```
+/specops:scan
+```
+
+The AI analyzes your codebase — package manifests, CI config, directory structure, existing docs — and writes a complete `specops.yaml` tailored to your stack. Review it, then:
+
+```bash
 specops update
 ```
 
-`specops init` walks you through an interactive setup, creates `specops.yaml`, and generates the initial file structure. `specops update` regenerates all managed files from your config whenever you make changes.
+`specops update` regenerates all managed files from `specops.yaml`. Run it whenever you make changes to the config.
+
+### Prefer the wizard?
+
+If you want to fill in the config manually instead of using the AI scan:
+
+```bash
+specops init --interactive
+```
+
+This runs the original interactive prompts and generates a starter `specops.yaml` directly.
 
 ## What gets generated
 

@@ -25,11 +25,19 @@ program
 program
   .command("init")
   .description(
-    "Initialize specops in the current project. Creates specops.yaml and generates managed files."
+    "Initialize specops in the current project. By default, installs the AI scan skill and prompts you to run /specops:scan to auto-generate specops.yaml."
   )
-  .action(async () => {
+  .option(
+    "--interactive",
+    "Use the interactive wizard instead of the AI scan (manual setup)"
+  )
+  .option(
+    "--no-scan",
+    "Alias for --interactive: skip scan mode and use the wizard"
+  )
+  .action(async (opts: { interactive?: boolean; scan?: boolean }) => {
     try {
-      await runInit();
+      await runInit({ interactive: opts.interactive, scan: opts.scan });
     } catch (err) {
       handleError(err);
     }

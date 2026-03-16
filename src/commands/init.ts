@@ -1,20 +1,37 @@
 /**
  * `specops init` command.
  *
- * Interactive wizard that creates specops.yaml and runs the initial
- * generation of all managed files. Designed to be fast and opinionated
- * with sensible defaults — the user can always edit specops.yaml later
- * and run `specops update`.
+ * Two modes:
+ *
+ * 1. Scan mode (default): Writes the specops-scan skill to
+ *    .claude/skills/specops-scan/SKILL.md and tells the user to run
+ *    `/specops:scan` in their AI tool. The AI does the rest — it analyzes
+ *    the codebase and generates specops.yaml automatically.
+ *
+ * 2. Interactive mode (--interactive / --no-scan): Runs the wizard that
+ *    prompts for project details and generates specops.yaml directly.
+ *    Use this as a fallback when you prefer manual setup.
  */
 
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { resolve, dirname } from "node:path";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import yaml from "js-yaml";
 import type { SpecopsConfig } from "../config/schema.js";
 import { runUpdate } from "./update.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export interface InitOptions {
+  /** Run scan mode (default true). Pass false to use the interactive wizard. */
+  scan?: boolean;
+  /** Alias for scan=false. Overrides scan if both are provided. */
+  interactive?: boolean;
+}
 
 interface InitAnswers {
   projectName: string;
@@ -29,18 +46,138 @@ interface InitAnswers {
 }
 
 /**
- * Run the interactive init command.
+ * Run the init command.
+ *
+ * Defaults to scan mode. Pass `{ interactive: true }` or `{ scan: false }`
+ * to use the interactive wizard instead.
  */
-export async function runInit(): Promise<void> {
+export async function runInit(options: InitOptions = {}): Promise<void> {
+  const useScan = options.interactive ? false : (options.scan ?? true);
+
+  if (useScan) {
+    await runScanInit();
+  } else {
+    await runInteractiveInit();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scan mode
+// ---------------------------------------------------------------------------
+
+/**
+ * Scan mode: write the specops-scan skill and prompt the user to run it.
+ *
+ * This is the bootstrap path. The AI skill does the heavy lifting of
+ * analyzing the codebase and generating specops.yaml.
+ */
+async function runScanInit(): Promise<void> {
   const projectDir = process.cwd();
-  const configPath = resolve(projectDir, "specops.yaml");
 
   console.log("");
   console.log(chalk.bold("specops init"));
   console.log(
+    chalk.dim("Bootstrap agent governance via AI-powered codebase scan.")
+  );
+  console.log("");
+
+  // Write the scan skill
+  const scanSkillDir = resolve(projectDir, ".claude", "skills", "specops-scan");
+  await mkdir(scanSkillDir, { recursive: true });
+
+  const scanSkillPath = resolve(scanSkillDir, "SKILL.md");
+  const skillContent = await loadScanSkillTemplate();
+  await writeFile(scanSkillPath, skillContent, "utf-8");
+
+  const relPath = scanSkillPath.replace(projectDir + "/", "");
+  console.log(chalk.green(`  Created ${relPath}`));
+  console.log("");
+  console.log(chalk.bold("Next step:"));
+  console.log("");
+  console.log(
+    "  Open your AI tool (Claude Code, Cursor, etc.) in this project and run:"
+  );
+  console.log("");
+  console.log(chalk.cyan("    /specops:scan"));
+  console.log("");
+  console.log(
+    "  The AI will analyze your codebase and generate a complete specops.yaml."
+  );
+  console.log("  Review it, then run:");
+  console.log("");
+  console.log(chalk.cyan("    specops update"));
+  console.log("");
+  console.log(
     chalk.dim(
-      "Configure agent governance for your project."
+      "  Prefer the wizard? Run `specops init --interactive` instead."
     )
+  );
+  console.log("");
+}
+
+/**
+ * Resolve the scan skill template path.
+ *
+ * At runtime, __dirname is dist/commands/. Walk up two levels to the package
+ * root and look in src/templates/ — the same convention used by other
+ * generators in this codebase.
+ */
+async function loadScanSkillTemplate(): Promise<string> {
+  const packageRoot = resolve(__dirname, "..", "..");
+  const templatePath = resolve(
+    packageRoot,
+    "src",
+    "templates",
+    "scan-skill.md"
+  );
+  try {
+    return await readFile(templatePath, "utf-8");
+  } catch {
+    return generateScanSkillFallback();
+  }
+}
+
+/**
+ * Minimal fallback scan skill content used when the template file cannot be
+ * found (e.g., during development before the first build).
+ */
+function generateScanSkillFallback(): string {
+  return [
+    "---",
+    'name: "specops-scan"',
+    'description: "Bootstrap specops.yaml by analyzing the codebase automatically."',
+    "---",
+    "",
+    "# Specops Scan",
+    "",
+    "Analyze this codebase and generate a complete `specops.yaml` configuration.",
+    "",
+    "## Steps",
+    "",
+    "1. Read package manifests to identify the tech stack",
+    "2. Analyze directory structure to map component boundaries",
+    "3. Read existing docs and conventions",
+    "4. Recommend appropriate agent roles",
+    "5. Write `specops.yaml` with discovered configuration",
+    "6. Tell the user to run `specops update`",
+  ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Interactive mode
+// ---------------------------------------------------------------------------
+
+/**
+ * Run the interactive init command (legacy / manual path).
+ */
+async function runInteractiveInit(): Promise<void> {
+  const projectDir = process.cwd();
+  const configPath = resolve(projectDir, "specops.yaml");
+
+  console.log("");
+  console.log(chalk.bold("specops init --interactive"));
+  console.log(
+    chalk.dim("Configure agent governance for your project.")
   );
   console.log("");
 
