@@ -5,9 +5,9 @@
  * defined in the specops config. Existing SKILL.md files are never
  * overwritten — they are owned by the user after initial generation.
  *
- * Framework-owned skills (feature-workspace, specops-scan) are always
- * overwritten on every `specops update` run. They are managed by specops
- * and should not be edited manually.
+ * Framework-owned skills (feature-workspace, specops-scan, specops-plan)
+ * are always overwritten on every `specops update` run. They are managed
+ * by specops and should not be edited manually.
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -136,29 +136,39 @@ export async function generateSkills(
   await mkdir(scanDir, { recursive: true });
 
   const scanPath = resolve(scanDir, "SKILL.md");
-  const scanContent = await loadScanSkillTemplate();
+  const scanContent = await loadSkillTemplate("scan-skill.md");
   await writeFile(scanPath, scanContent, "utf-8");
   created.push(scanPath);
+
+  // Framework-owned: specops-plan (always overwritten — never user-edited).
+  const planDir = resolve(projectDir, ".claude", "skills", "specops-plan");
+  await mkdir(planDir, { recursive: true });
+
+  const planPath = resolve(planDir, "SKILL.md");
+  const planContent = await loadSkillTemplate("plan-skill.md");
+  await writeFile(planPath, planContent, "utf-8");
+  created.push(planPath);
 
   return created;
 }
 
 /**
- * Load the scan skill template from the bundled templates directory.
+ * Load a skill template from the bundled templates directory.
  *
  * At runtime, __dirname is dist/generators/. We walk up two levels to the
  * package root and then into src/templates/ — the same pattern used by the
  * CLAUDE.md generator. The src/templates/ directory is shipped in the npm
  * package via the "files" field in package.json.
  */
-async function loadScanSkillTemplate(): Promise<string> {
+async function loadSkillTemplate(filename: string): Promise<string> {
   const packageRoot = resolve(__dirname, "..", "..");
-  const templatePath = resolve(packageRoot, "src", "templates", "scan-skill.md");
+  const templatePath = resolve(packageRoot, "src", "templates", filename);
   try {
     return await readFile(templatePath, "utf-8");
   } catch {
     // Fallback: generate a minimal stub so the skill is always present.
-    return generateScanSkillFallback();
+    if (filename === "scan-skill.md") return generateScanSkillFallback();
+    return generatePlanSkillFallback();
   }
 }
 
@@ -187,6 +197,31 @@ function generateScanSkillFallback(): string {
     "4. Recommend appropriate agent roles",
     "5. Write `specops.yaml` with discovered configuration",
     "6. Tell the user to run `specops update`",
+  ].join("\n");
+}
+
+/**
+ * Minimal fallback plan skill content used when the template file cannot be
+ * found (e.g., during development before the first build).
+ */
+function generatePlanSkillFallback(): string {
+  return [
+    "---",
+    'name: "specops-plan"',
+    'description: "Plan a feature using an ExecPlan."',
+    "---",
+    "",
+    "# Specops Plan",
+    "",
+    "Create a feature branch and ExecPlan for a new feature.",
+    "",
+    "## Steps",
+    "",
+    "1. Parse feature name from args (or ask the user)",
+    "2. Read specops.yaml, CLAUDE.md, and relevant code",
+    "3. Fill out the ExecPlan template at docs/exec-plans/<feature>.md",
+    "4. Create feature branch, write plan, commit",
+    "5. Present plan to user for review",
   ].join("\n");
 }
 
