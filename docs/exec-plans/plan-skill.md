@@ -1,6 +1,6 @@
 # ExecPlan: Plan Skill
 
-**Status:** In Progress
+**Status:** Complete
 **Branch:** feature/plan-skill
 **PR:** (filled when opened)
 **Author:** Claude Opus 4.6
@@ -14,9 +14,9 @@ Add a `/specops:plan <feature-name>` skill that lets users plan features entirel
 
 ## Progress
 
-- [ ] Milestone 1: Create plan skill template
-- [ ] Milestone 2: Wire into skills generator
-- [ ] Milestone 3: Verify end-to-end
+- [x] Milestone 1: Create plan skill template (2026-03-16)
+- [x] Milestone 2: Wire into skills generator (2026-03-16)
+- [x] Milestone 3: Verify end-to-end (2026-03-16)
 
 ## Surprises & Discoveries
 
@@ -34,7 +34,7 @@ Add a `/specops:plan <feature-name>` skill that lets users plan features entirel
 
 ## Outcomes & Retrospective
 
-(Not yet complete)
+Shipped all 3 milestones. The plan skill template is 170 lines across 5 phases. Refactored `loadScanSkillTemplate()` into a generic `loadSkillTemplate(filename)` to avoid copy-paste for each framework-owned skill. No deferred work.
 
 ---
 
