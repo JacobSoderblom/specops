@@ -1,0 +1,128 @@
+# specops configuration
+# Run `specops update` after editing to regenerate managed files.
+
+project:
+  name: specops
+  description: Agent operating system for AI-assisted software development. Scaffolds governance, workflows, and coordination for AI agents working on codebases.
+  repository: https://github.com/JacobSoderblom/specops
+
+stack:
+  languages:
+    - TypeScript
+  frameworks:
+    - Node.js
+    - Commander (CLI)
+    - Handlebars (templates)
+  infrastructure:
+    - npm (published package)
+
+agents:
+  roles:
+    - name: Developer
+      authority: cli-design, generators, templates, config-schema
+      description: Designs and implements CLI commands, generators, templates, and config handling
+    - name: Staff Engineer
+      authority: code-review, quality, risk-assessment
+      description: Reviews plans and code for quality, correctness, and framework usability
+
+escalation:
+  categories:
+    - name: Public API and CLI
+      triggers:
+        - Changing CLI command names, flags, or output format
+        - Changing specops.yaml schema (breaking existing configs)
+        - Changing generated file paths or structure
+        - Removing or renaming exported TypeScript types
+    - name: Template Quality
+      triggers:
+        - Changing ExecPlan template sections or structure
+        - Modifying escalation rule defaults
+        - Changing CLAUDE.md generation logic
+    - name: User-Owned vs Framework-Owned
+      triggers:
+        - Changing which files are overwritten on update vs created once
+        - Any change that could destroy user customizations
+    - name: Security
+      triggers:
+        - Handling file paths from user input (path traversal)
+        - Executing shell commands from config values
+    - name: Code Quality
+      triggers:
+        - Duplicating logic that should be shared
+        - Test failures you do not understand
+        - Disabling or skipping tests
+
+docHierarchy:
+  layers:
+    - path: README.md
+      description: Public API, philosophy, quick start
+    - path: src/config/schema.ts
+      description: Authoritative config shape — specops.yaml must match these types
+    - path: src/templates/
+      description: Template content shipped to users
+    - path: Code and tests
+      description: Current implementation
+
+architecture:
+  principles:
+    - Repository knowledge is the system of record
+    - Enforce invariants mechanically, not via docs alone
+    - Generated files stay in sync with config — one source of truth
+    - Living documents over write-once specs
+    - Don't over-engineer small projects — match governance to complexity
+  components:
+    - name: cli
+      owns:
+        - Command parsing and user interaction (src/commands/)
+        - Entry point and argument handling (src/index.ts)
+      avoids:
+        - File generation logic (belongs in generators)
+        - Config validation (belongs in config)
+    - name: config
+      owns:
+        - specops.yaml schema types (src/config/schema.ts)
+        - Config loading and validation (src/config/loader.ts)
+      avoids:
+        - CLI interaction
+        - File generation
+    - name: generators
+      owns:
+        - All file generation from config (src/generators/)
+        - Deciding which files to overwrite vs create-once
+      avoids:
+        - Config parsing (uses loaded config)
+        - CLI interaction
+    - name: templates
+      owns:
+        - Markdown and Handlebars templates (src/templates/)
+        - Default config template (templates/specops.yaml)
+      avoids:
+        - Runtime logic
+
+skills:
+  skills: []
+
+resources:
+  sections:
+    - name: Development
+      links:
+        - label: Setup and quick start
+          path: README.md
+        - label: Config schema reference
+          path: src/config/schema.ts
+    - name: Templates
+      links:
+        - label: ExecPlan template
+          path: src/templates/exec-plan.md
+        - label: Scan skill template
+          path: src/templates/scan-skill.md
+        - label: CLAUDE.md template
+          path: src/templates/claude-md.hbs
+
+principles:
+  items:
+    - Repository knowledge is the system of record
+    - Enforce invariants mechanically, not via docs alone
+    - Living documents over write-once specs
+    - Match governance complexity to project complexity
+    - User-owned files are never overwritten; framework-owned files are always regenerated

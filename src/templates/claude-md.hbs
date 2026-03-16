@@ -13,7 +13,7 @@
 5. **Suggest improvements** -- if docs are unclear or missing, flag it ([how](docs/agent-context/continuous-improvement.md))
 
 ---
-{{#if skills}}
+{{#if skills.skills}}
 
 ## Skills
 
@@ -35,9 +35,9 @@
 | `docs/agent-context/escalation-rules.md` | Escalation rules and conflict resolution |
 | `docs/exec-plans/PLANS.md` | ExecPlan process and template |
 | `docs/agent-context/README.md` | Agent workflow overview |
-{{#if architecture}}
-{{#each architecture.components}}
-| `docs/architecture.md` | System architecture |
+{{#if docHierarchy}}
+{{#each docHierarchy.layers}}
+| `{{this.path}}` | {{this.description}} |
 {{/each}}
 {{/if}}
 
