@@ -1,0 +1,155 @@
+# specops configuration
+# This file defines your project's agent governance structure.
+# Run `specops update` after editing to regenerate managed files.
+
+# ---------------------------------------------------------------------------
+# Project metadata
+# ---------------------------------------------------------------------------
+project:
+  name: "{{projectName}}"
+  description: "{{projectDescription}}"
+  # repository: https://github.com/org/repo
+
+# ---------------------------------------------------------------------------
+# Technology stack
+# ---------------------------------------------------------------------------
+stack:
+  languages:
+    - TypeScript
+  frameworks:
+    - React
+  databases:
+    - PostgreSQL
+  infrastructure:
+    - Docker
+
+# ---------------------------------------------------------------------------
+# Agent roles
+# Ordered by authority — first role wins ambiguous decisions.
+# ---------------------------------------------------------------------------
+agents:
+  roles:
+    - name: Backend Architect
+      authority: system-design, api-contracts, data-models
+      description: Designs backend systems and produces authoritative implementation plans
+    - name: Frontend Developer
+      authority: ui-implementation, component-design, state-management
+      description: Implements UI components and consumes API contracts
+    - name: DevOps Automator
+      authority: ci-cd, deployment, infrastructure
+      description: Manages CI/CD pipelines, deployment, and infrastructure
+    - name: Staff Engineer
+      authority: code-review, quality, risk-assessment
+      description: Reviews plans and code for quality, risk, and architectural alignment
+
+# ---------------------------------------------------------------------------
+# Escalation rules
+# When agents must STOP and ask a human.
+# ---------------------------------------------------------------------------
+escalation:
+  categories:
+    - name: Architecture and Design
+      triggers:
+        - Introducing new components or service boundaries
+        - Changing API contracts or data models
+        - Modifying component responsibilities
+        - Architectural decision not covered by existing docs
+    - name: Security and Data
+      triggers:
+        - Modifying authentication or authorization boundaries
+        - Changing how secrets or credentials are handled
+        - Modifying database schemas without a migration strategy
+    - name: Breaking Changes
+      triggers:
+        - Breaking any public API (REST, GraphQL, WebSocket, events)
+        - Removing or renaming public interfaces
+        - Breaking backward compatibility without a deprecation plan
+    - name: Operational Impact
+      triggers:
+        - Changing deployment topology or infrastructure requirements
+        - Modifying observability or logging semantics
+        - Changes that could impact system reliability
+    - name: Code Quality
+      triggers:
+        - Duplicating code that should be shared
+        - Test failures you do not understand
+        - Disabling or skipping tests
+        - Working around existing abstractions instead of using them
+
+# ---------------------------------------------------------------------------
+# Documentation authority hierarchy
+# When docs conflict, higher-ranked layers win. Highest first.
+# ---------------------------------------------------------------------------
+docHierarchy:
+  layers:
+    - path: docs/architecture.md
+      description: System architecture and component boundaries
+    - path: docs/api-contracts.md
+      description: API contracts and schemas
+    - path: "docs/adr/*.md"
+      description: Architecture Decision Records
+    - path: Code and tests
+      description: Ground truth for current implementation
+    - path: Component READMEs
+      description: Implementation details
+
+# ---------------------------------------------------------------------------
+# Architecture components (optional)
+# Define component boundaries so agents know where code belongs.
+# ---------------------------------------------------------------------------
+# architecture:
+#   principles:
+#     - Parse at boundaries, validate with types not runtime checks
+#     - Enforce invariants mechanically (lints, tests), not via docs alone
+#   components:
+#     - name: api-server
+#       owns:
+#         - HTTP routing and middleware
+#         - Authentication and authorization
+#         - Request validation
+#       avoids:
+#         - Business logic (belongs in domain layer)
+#         - Direct database queries (use repository layer)
+#     - name: domain
+#       owns:
+#         - Business rules and invariants
+#         - Domain models and value objects
+#       avoids:
+#         - HTTP concerns
+#         - Database implementation details
+
+# ---------------------------------------------------------------------------
+# Skills
+# Domain-specific workflow instructions agents load on demand.
+# ---------------------------------------------------------------------------
+skills:
+  skills:
+    - name: backend-workflows
+      description: Common backend development workflows
+      whenToUse: Adding migrations, API endpoints, bus events, or writing tests
+    - name: frontend-workflows
+      description: Common frontend development workflows
+      whenToUse: Adding routes, components, API integrations, or state management
+
+# ---------------------------------------------------------------------------
+# Resources — links shown in CLAUDE.md for quick navigation
+# ---------------------------------------------------------------------------
+resources:
+  sections:
+    - name: Development
+      links:
+        - label: Setup guide
+          path: README.md
+    - name: Operations
+      links:
+        - label: Deployment
+          path: docs/deployment.md
+
+# ---------------------------------------------------------------------------
+# Design principles — shown in CLAUDE.md
+# ---------------------------------------------------------------------------
+# principles:
+#   items:
+#     - Repository knowledge is the system of record
+#     - Enforce invariants mechanically, not via docs alone
+#     - Semantic file organization (many small well-scoped files)
