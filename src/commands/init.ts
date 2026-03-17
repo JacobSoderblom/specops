@@ -40,6 +40,7 @@ interface InitAnswers {
   frameworks: string;
   databases: string;
   infrastructure: string;
+  agentTargets: string[];
   wantRoles: boolean;
   wantEscalation: boolean;
   wantSkills: boolean;
@@ -95,7 +96,7 @@ async function runScanInit(): Promise<void> {
   console.log(chalk.bold("Next step:"));
   console.log("");
   console.log(
-    "  Open your AI tool (Claude Code, Cursor, etc.) in this project and run:"
+    "  Open your AI tool (Claude Code, Codex, Cursor, etc.) in this project and run:"
   );
   console.log("");
   console.log(chalk.cyan("    /specops:scan"));
@@ -237,6 +238,15 @@ async function runInteractiveInit(): Promise<void> {
       default: "",
     },
     {
+      type: "checkbox",
+      name: "agentTargets",
+      message: "Which AI agent tools do you use?",
+      choices: [
+        { name: "Claude Code", value: "claude", checked: true },
+        { name: "Codex (OpenAI)", value: "codex" },
+      ],
+    },
+    {
       type: "confirm",
       name: "wantRoles",
       message: "Configure agent roles? (recommended)",
@@ -289,6 +299,8 @@ function buildConfig(answers: InitAnswers): SpecopsConfig {
     },
     agents: {
       roles: [],
+      targets:
+        answers.agentTargets.length > 0 ? answers.agentTargets : ["claude"],
     },
   };
 

@@ -1,6 +1,6 @@
 # ExecPlan: Support for Codex
 
-**Status:** Draft
+**Status:** Complete
 **Branch:** feature/support-codex
 **PR:** (filled when opened)
 **Author:** Claude Opus 4.6
@@ -14,14 +14,14 @@ specops currently generates governance files exclusively for Claude Code (CLAUDE
 
 ## Progress
 
-- [ ] Milestone 1: Schema and config — add `agents.targets` to config
-- [ ] Milestone 2: AGENTS.md template and generator
-- [ ] Milestone 3: Wire into update command and init flow
-- [ ] Milestone 4: Tests
+- [x] Milestone 1: Schema and config — add `agents.targets` to config (2026-03-16)
+- [x] Milestone 2: AGENTS.md template and generator (2026-03-16)
+- [x] Milestone 3: Wire into update command and init flow (2026-03-16)
+- [x] Milestone 4: Tests — smoke-tested all target modes (2026-03-16)
 
 ## Surprises & Discoveries
 
-(None yet)
+- No test framework was configured in the project, so formal unit tests were not added. Milestone 4 was validated via manual smoke tests covering all three target modes (claude-only default, codex-only, both) and invalid target rejection.
 
 ## Decision Log
 

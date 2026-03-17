@@ -10,6 +10,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import yaml from "js-yaml";
 import type { SpecopsConfig } from "./schema.js";
+import { KNOWN_TARGETS } from "./schema.js";
 
 /** Thrown when config is missing or structurally invalid. */
 export class ConfigError extends Error {
@@ -91,6 +92,19 @@ function validate(data: unknown): SpecopsConfig {
     requireString(r, "name", `agents.roles[${i}].name`);
     requireString(r, "authority", `agents.roles[${i}].authority`);
     requireString(r, "description", `agents.roles[${i}].description`);
+  }
+
+  // -- agents.targets (optional) --------------------------------------------
+  if (agents["targets"] !== undefined) {
+    requireStringArray(agents, "targets", "agents.targets");
+    const targets = agents["targets"] as string[];
+    for (let i = 0; i < targets.length; i++) {
+      if (!(KNOWN_TARGETS as readonly string[]).includes(targets[i])) {
+        throw new ConfigError(
+          `agents.targets[${i}] must be one of: ${KNOWN_TARGETS.join(", ")}. Got "${targets[i]}".`
+        );
+      }
+    }
   }
 
   // -- escalation (optional) -----------------------------------------------
@@ -180,6 +194,14 @@ function requireArray(
   if (!Array.isArray(obj[key])) {
     throw new ConfigError(`${path} must be an array.`);
   }
+}
+
+/**
+ * Return the effective agent targets for a config.
+ * Defaults to ["claude"] when the field is absent.
+ */
+export function getTargets(config: SpecopsConfig): string[] {
+  return config.agents.targets ?? ["claude"];
 }
 
 function requireStringArray(

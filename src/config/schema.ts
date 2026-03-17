@@ -50,7 +50,17 @@ export interface AgentRole {
 export interface AgentsConfig {
   /** Ordered list of agent roles. First role listed has highest authority for ambiguous decisions. */
   roles: AgentRole[];
+  /**
+   * Which agent tools to generate files for.
+   * Valid values: "claude" (generates CLAUDE.md + .claude/skills/), "codex" (generates AGENTS.md).
+   * Defaults to ["claude"] when omitted — existing configs work without changes.
+   */
+  targets?: string[];
 }
+
+/** Known agent target identifiers. */
+export const KNOWN_TARGETS = ["claude", "codex"] as const;
+export type AgentTarget = (typeof KNOWN_TARGETS)[number];
 
 // ---------------------------------------------------------------------------
 // Escalation rules
