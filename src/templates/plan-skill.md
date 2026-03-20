@@ -176,12 +176,16 @@ Break down each milestone into ordered, actionable steps. Each step should:
 
 ---
 
-### Phase 5: Present for Review
+### Phase 5: Present Detailed Summary
 
-Show the user the key sections of the plan:
-- Purpose (what and why)
-- Milestones (scope overview)
-- Any decisions made
+Present a comprehensive summary of the plan. The user should be able to understand the entire plan without reading the file. Include:
+
+1. **Problem** — what's broken or missing, in 1-2 sentences
+2. **Solution** — what the plan does about it, in 1-2 sentences
+3. **What it looks like** — if the feature has a user-visible output (file format, CLI output, config shape), show a concrete example
+4. **Milestone breakdown** — for each milestone, a short paragraph explaining what it does and why, naming the key files involved
+5. **Key decisions** — numbered list of design choices and their rationale
+6. **What this enables next** — future work this unblocks (if any)
 
 Then ask:
 
