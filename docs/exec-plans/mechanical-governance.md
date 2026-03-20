@@ -12,11 +12,11 @@
 
 specops states "enforce invariants mechanically, not via docs alone" as a core principle, but currently all governance is advisory text — role labels, escalation rules, architecture boundaries — rendered into Markdown that an agent may or may not follow. Research confirms that role labels in context files don't reliably change single-agent behavior, and that bloated CLAUDE.md files cause agents to ignore instructions.
 
-This feature makes governance mechanical: make roles optional to slim CLAUDE.md, and generate Claude Code hooks that enforce architecture boundaries via a new `specops guard` CLI command. Instead of hoping the agent reads a table, specops will run a check script on every file edit.
+This feature makes governance mechanical: remove the roles concept entirely to slim CLAUDE.md, and generate Claude Code hooks that enforce architecture boundaries via a new `specops guard` CLI command. Instead of hoping the agent reads a table, specops will run a check script on every file edit.
 
 ## Progress
 
-- [ ] Milestone 1: Make roles optional and slim CLAUDE.md (2026-03-20)
+- [ ] Milestone 1: Remove roles and slim CLAUDE.md (2026-03-20)
 - [ ] Milestone 2: Add `specops guard` CLI command (2026-03-20)
 - [ ] Milestone 3: Hook generator — write `.claude/settings.json` hooks (2026-03-20)
 - [ ] Milestone 4: Wire hook generation into `specops update` (2026-03-20)
@@ -27,9 +27,9 @@ This feature makes governance mechanical: make roles optional to slim CLAUDE.md,
 
 ## Decision Log
 
-**Decision:** Make `agents.roles` optional rather than removing it entirely.
-**Context:** Some users may want roles for documentation or future multi-agent support. Removing the field entirely would break existing configs.
-**Rationale:** Making it optional is backward-compatible — existing configs with roles still work, new configs can omit them. The roles table in CLAUDE.md becomes conditional: only rendered when roles are defined. This shrinks CLAUDE.md for users who don't need roles without breaking anyone.
+**Decision:** Remove `agents.roles` entirely — breaking change.
+**Context:** Research shows role labels in context files don't change single-agent behavior. The roles table consumes context tokens without providing governance value. Escalation rules and architecture boundaries already do the real work.
+**Rationale:** Keeping dead weight "just in case" contradicts the principle of matching governance to complexity. This is a v0.x project — breaking changes are acceptable. Users with existing configs will get a clear validation error pointing them to remove the `roles` section. If multi-agent support becomes real later, it should generate native `.claude/agents/` files, not a Markdown table.
 
 **Decision:** Enforce architecture boundaries via a `specops guard` CLI command called from hooks, rather than inline shell scripts in hooks config.
 **Context:** Claude Code hooks execute shell commands. Architecture boundary checking requires reading specops.yaml, parsing component definitions, and matching file paths. This is too complex for inline shell.
@@ -45,9 +45,9 @@ This feature makes governance mechanical: make roles optional to slim CLAUDE.md,
 
 ### Relevant Code Areas
 
-**Config schema** — `src/config/schema.ts` defines `AgentsConfig` with `roles: AgentRole[]` (currently required). The `ArchitectureComponent` interface has `owns: string[]` and `avoids: string[]` — these are the boundaries to enforce.
+**Config schema** — `src/config/schema.ts` defines `AgentsConfig` with `roles: AgentRole[]` (to be removed) and `targets?: string[]` (stays). The `ArchitectureComponent` interface has `owns: string[]` and `avoids: string[]` — these are the boundaries to enforce.
 
-**Config loader** — `src/config/loader.ts` validates `agents.roles` as a required array (line 84). This needs to become optional. The `validate()` function also validates architecture components if present.
+**Config loader** — `src/config/loader.ts` validates `agents.roles` as a required array (line 84). This entire block gets removed. The `validate()` function also validates architecture components if present.
 
 **CLAUDE.md template** — `src/templates/claude-md.hbs` lines 111-119 render the Agents table unconditionally. Needs `{{#if}}` guard.
 
@@ -87,32 +87,39 @@ The `specops guard` command is the key design choice: it turns architecture boun
 
 ## Concrete Steps
 
-### Milestone 1: Make Roles Optional and Slim CLAUDE.md
+### Milestone 1: Remove Roles and Slim CLAUDE.md
 
-1. In `src/config/schema.ts`, change `AgentsConfig.roles` from `roles: AgentRole[]` to `roles?: AgentRole[]`.
+1. In `src/config/schema.ts`:
+   - Remove the `AgentRole` interface
+   - Remove `roles: AgentRole[]` from `AgentsConfig`
+   - The `AgentsConfig` interface keeps only `targets?: string[]`
 
-2. In `src/config/loader.ts`, make roles validation optional:
-   - Remove `requireArray(agents, "roles", "agents.roles")` and its loop
-   - Add optional validation: if `agents.roles` is present, validate it as before
+2. In `src/config/loader.ts`:
+   - Remove the `agents.roles` validation block (lines 84-95)
+   - If `agents.roles` is present in the YAML, ignore it silently (don't error — soft deprecation)
 
-3. In `src/templates/claude-md.hbs`, wrap the Agents section in a conditional:
-   ```handlebars
-   {{#if agents.roles}}
-   ## Agents
-   ...
-   {{/if}}
-   ```
+3. In `src/templates/claude-md.hbs`:
+   - Remove the entire Agents section (lines 111-121: the table, the "Agents discover project context" line)
 
-4. In `src/templates/agents-md.hbs`, same conditional wrapping.
+4. In `src/templates/agents-md.hbs`:
+   - Remove the entire Agents section (lines 97-103)
 
-5. In `src/generators/agent-context.ts`, make the Agent Hierarchy section conditional:
-   - Guard `config.agents.roles` existence before iterating
-   - Remove the "When Agents Disagree" section when no roles defined
-   - Remove the `roles[0]` access that would crash on empty roles
+5. In `src/generators/agent-context.ts`:
+   - Remove the Agent Hierarchy section entirely (lines 149-165)
+   - Remove the "When Agents Disagree" block
 
-6. In `src/commands/init.ts`, update `buildConfig` to not require roles:
-   - When `wantRoles` is false, set `roles: []` (or omit)
-   - The interactive wizard already asks "Configure agent roles?" — make "no" result in no roles at all
+6. In `src/commands/init.ts`:
+   - Remove the `wantRoles` prompt
+   - Remove the `AgentRole` default population in `buildConfig`
+   - The `agents` section in generated config only contains `targets`
+
+7. In `src/templates/scan-skill.md`:
+   - Remove "Phase 4: Determine Agent Roles" entirely
+   - Remove role-related guidance and examples from the output template
+   - Renumber remaining phases
+
+8. In `specops.yaml` (this project's own config):
+   - Remove the `agents.roles` section
 
 ### Milestone 2: Add `specops guard` CLI Command
 
@@ -182,15 +189,14 @@ The `specops guard` command is the key design choice: it turns architecture boun
 - `specops guard` with a file not violating any boundary exits with code 0
 - `specops guard` with no architecture config exits with code 0
 - A config with no `agents.roles` loads successfully
-- A config with `agents.roles: []` loads successfully
-- CLAUDE.md generated without roles omits the Agents section entirely
-- CLAUDE.md generated with roles includes the Agents section (backward compat)
+- A config with `agents.roles` present is silently ignored (no error)
+- CLAUDE.md no longer contains an Agents section
 
 ### Acceptance Criteria
 
-- [ ] Existing specops.yaml files (with roles) continue to work without changes
-- [ ] A specops.yaml with no `agents.roles` field loads and generates valid CLAUDE.md
-- [ ] CLAUDE.md without roles is shorter (no Agents section, no "Agents discover project context" line)
+- [ ] A specops.yaml with `agents.roles` still loads (silently ignored)
+- [ ] A specops.yaml without `agents.roles` loads and generates valid CLAUDE.md
+- [ ] CLAUDE.md no longer contains an Agents section
 - [ ] `specops guard src/commands/init.ts` exits 0 (file is in cli component's owns)
 - [ ] `specops guard` on a boundary violation exits 1 with a clear warning message
 - [ ] `specops update` generates `.claude/settings.json` with hooks when file doesn't exist
