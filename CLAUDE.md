@@ -99,17 +99,6 @@ Full procedures: [`docs/agent-context/escalation-rules.md`](docs/agent-context/e
 
 ---
 
-## Agents
-
-| Role | Authority |
-|------|-----------|
-| Developer | cli-design, generators, templates, config-schema |
-| Staff Engineer | code-review, quality, risk-assessment |
-
-Agents discover project context via this file and `.claude/skills/`.
-
----
-
 ## Resources
 
 **Development:**

@@ -41,7 +41,6 @@ interface InitAnswers {
   databases: string;
   infrastructure: string;
   agentTargets: string[];
-  wantRoles: boolean;
   wantEscalation: boolean;
   wantSkills: boolean;
 }
@@ -158,9 +157,8 @@ function generateScanSkillFallback(): string {
     "1. Read package manifests to identify the tech stack",
     "2. Analyze directory structure to map component boundaries",
     "3. Read existing docs and conventions",
-    "4. Recommend appropriate agent roles",
-    "5. Write `specops.yaml` with discovered configuration",
-    "6. Tell the user to run `specops update`",
+    "4. Write `specops.yaml` with discovered configuration",
+    "5. Tell the user to run `specops update`",
   ].join("\n");
 }
 
@@ -248,12 +246,6 @@ async function runInteractiveInit(): Promise<void> {
     },
     {
       type: "confirm",
-      name: "wantRoles",
-      message: "Configure agent roles? (recommended)",
-      default: true,
-    },
-    {
-      type: "confirm",
       name: "wantEscalation",
       message: "Include default escalation rules?",
       default: true,
@@ -298,7 +290,6 @@ function buildConfig(answers: InitAnswers): SpecopsConfig {
       languages: parseList(answers.languages),
     },
     agents: {
-      roles: [],
       targets:
         answers.agentTargets.length > 0 ? answers.agentTargets : ["claude"],
     },
@@ -313,37 +304,6 @@ function buildConfig(answers: InitAnswers): SpecopsConfig {
 
   const infrastructure = parseList(answers.infrastructure);
   if (infrastructure.length > 0) config.stack.infrastructure = infrastructure;
-
-  // Default roles
-  if (answers.wantRoles) {
-    config.agents.roles = [
-      {
-        name: "Backend Architect",
-        authority: "system-design, api-contracts, data-models",
-        description:
-          "Designs backend systems and produces authoritative implementation plans",
-      },
-      {
-        name: "Frontend Developer",
-        authority: "ui-implementation, component-design, state-management",
-        description: "Implements UI components and consumes API contracts",
-      },
-      {
-        name: "Staff Engineer",
-        authority: "code-review, quality, risk-assessment",
-        description:
-          "Reviews plans and code for quality, risk, and architectural alignment",
-      },
-    ];
-  } else {
-    config.agents.roles = [
-      {
-        name: "Developer",
-        authority: "implementation",
-        description: "Implements features and fixes",
-      },
-    ];
-  }
 
   // Default escalation
   if (answers.wantEscalation) {

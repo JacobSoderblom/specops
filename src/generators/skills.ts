@@ -194,9 +194,8 @@ function generateScanSkillFallback(): string {
     "1. Read package manifests to identify the tech stack",
     "2. Analyze directory structure to map component boundaries",
     "3. Read existing docs and conventions",
-    "4. Recommend appropriate agent roles",
-    "5. Write `specops.yaml` with discovered configuration",
-    "6. Tell the user to run `specops update`",
+    "4. Write `specops.yaml` with discovered configuration",
+    "5. Tell the user to run `specops update`",
   ].join("\n");
 }
 

@@ -146,26 +146,6 @@ function generateReadme(config: SpecopsConfig): string {
     lines.push("");
   }
 
-  // Agent hierarchy
-  lines.push("## Agent Hierarchy");
-  lines.push("");
-  for (const role of config.agents.roles) {
-    lines.push(`**${role.name}**`);
-    lines.push(`- ${role.description}`);
-    lines.push(`- Authority: ${role.authority}`);
-    lines.push("");
-  }
-
-  lines.push("### When Agents Disagree");
-  lines.push("");
-  lines.push(
-    `- **${config.agents.roles[0].name}** has highest authority for ambiguous decisions`
-  );
-  lines.push("- If unclear, escalate to user");
-  lines.push("");
-  lines.push("---");
-  lines.push("");
-
   // Escalation summary
   lines.push("## Escalation Rules");
   lines.push("");

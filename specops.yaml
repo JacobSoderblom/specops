@@ -16,14 +16,7 @@ stack:
   infrastructure:
     - npm (published package)
 
-agents:
-  roles:
-    - name: Developer
-      authority: cli-design, generators, templates, config-schema
-      description: Designs and implements CLI commands, generators, templates, and config handling
-    - name: Staff Engineer
-      authority: code-review, quality, risk-assessment
-      description: Reviews plans and code for quality, correctness, and framework usability
+agents: {}
 
 escalation:
   categories:

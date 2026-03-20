@@ -12,13 +12,11 @@ AI coding agents are powerful but chaotic. Without structure, they:
 - Lack shared context about project conventions and boundaries
 - Have no escalation rules -- they guess instead of asking
 - Produce no audit trail of design decisions
-- Cannot coordinate across roles (backend, frontend, devops)
+- Have no way to coordinate across sessions
 
 ## What specops provides
 
 **ExecPlans** -- Living markdown documents that track features from design through implementation to outcome. They travel with the code on feature branches and become permanent project history.
-
-**Agent roles and hierarchy** -- Configurable roles (Backend Architect, Frontend Developer, DevOps, etc.) with explicit authority chains. Agents know who owns what decisions and when to escalate.
 
 **Skills** -- Domain-specific workflow instructions that agents load on demand. Backend workflows, frontend patterns, deployment procedures -- all discoverable and version-controlled.
 
@@ -103,14 +101,7 @@ stack:
     - Redis
     - Docker
 
-agents:
-  roles:
-    - name: Backend Architect
-      authority: system-design, api-contracts, data-models
-      description: Designs backend systems and produces implementation plans
-    - name: Frontend Developer
-      authority: ui-implementation, component-design
-      description: Implements UI based on designs and API contracts
+agents: {}
 ```
 
 See the generated `specops.yaml` after `specops init` for the full configuration reference with all available options.

@@ -81,18 +81,7 @@ function validate(data: unknown): SpecopsConfig {
   // -- agents (required) ---------------------------------------------------
   requireObject(obj, "agents");
   const agents = obj["agents"] as Record<string, unknown>;
-  requireArray(agents, "roles", "agents.roles");
-  const roles = agents["roles"] as unknown[];
-  for (let i = 0; i < roles.length; i++) {
-    const role = roles[i];
-    if (typeof role !== "object" || role === null) {
-      throw new ConfigError(`agents.roles[${i}] must be an object.`);
-    }
-    const r = role as Record<string, unknown>;
-    requireString(r, "name", `agents.roles[${i}].name`);
-    requireString(r, "authority", `agents.roles[${i}].authority`);
-    requireString(r, "description", `agents.roles[${i}].description`);
-  }
+  // Note: agents.roles is silently ignored if present (removed in v0.2)
 
   // -- agents.targets (optional) --------------------------------------------
   if (agents["targets"] !== undefined) {

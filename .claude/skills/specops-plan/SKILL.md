@@ -38,7 +38,7 @@ Work through these phases in order.
 
 Read these files to understand the project context:
 
-1. **`specops.yaml`** — tech stack, agent roles, escalation rules, architecture components
+1. **`specops.yaml`** — tech stack, escalation rules, architecture components
 2. **`CLAUDE.md`** — agent entry point, design principles, conflict resolution hierarchy
 3. **`docs/exec-plans/PLANS.md`** — ExecPlan process, template, and guidelines
 

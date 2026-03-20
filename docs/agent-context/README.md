@@ -14,23 +14,6 @@ This directory contains **agent-specific** content:
 
 ---
 
-## Agent Hierarchy
-
-**Developer**
-- Designs and implements CLI commands, generators, templates, and config handling
-- Authority: cli-design, generators, templates, config-schema
-
-**Staff Engineer**
-- Reviews plans and code for quality, correctness, and framework usability
-- Authority: code-review, quality, risk-assessment
-
-### When Agents Disagree
-
-- **Developer** has highest authority for ambiguous decisions
-- If unclear, escalate to user
-
----
-
 ## Escalation Rules
 
 All agents must follow the escalation rules in `/CLAUDE.md`.

@@ -169,54 +169,7 @@ Conventions found:
 
 ---
 
-### Phase 4: Determine Agent Roles
-
-Based on phases 1-3, recommend appropriate agent roles. Apply these rules:
-
-**Always include:**
-- `Staff Engineer` — Every project benefits from a review role
-
-**For backend work:**
-- If there is substantial server-side code (API, business logic, data layer):
-  - Add `Backend Architect` (owns system design, API contracts)
-  - Add `Backend Developer` (implements features per architect's plan)
-- If it is a simple single-file script or tiny utility, skip the architect/developer split and use just `Developer`
-
-**For frontend work:**
-- If there is a UI (React, Vue, Angular, Svelte, etc.):
-  - Add `Frontend Developer`
-- If there is a significant design system or complex UI:
-  - Also add `UI Designer`
-
-**For infrastructure and deployment:**
-- If there is CI/CD, Dockerfile, Kubernetes, Terraform, or cloud deployment config:
-  - Add `DevOps Automator`
-- If there is a complex platform (message bus, adapter framework, plugin system, runtime):
-  - Add `Platform Engineer`
-
-**For fullstack:**
-- Include both backend and frontend roles
-
-**For pure tooling/CLI:**
-- `Developer` + `Staff Engineer` is often sufficient
-
-**For API-heavy backends:**
-- Add `API Tester` if the project has integration tests or a testing-first culture
-
-**For security-sensitive projects:**
-- Check for auth libraries (passport, next-auth, oauth, jwt, bcrypt) or explicit security patterns
-- If present, add `Security Engineer`
-
-**Output format for this phase:**
-```
-Recommended roles:
-- [Role name]: [one-line rationale]
-- [Role name]: [one-line rationale]
-```
-
----
-
-### Phase 5: Generate specops.yaml
+### Phase 4: Generate specops.yaml
 
 Write a complete `specops.yaml` to the project root. Use the schema below. Every field should reflect what you actually found — do not use placeholder values.
 
@@ -254,24 +207,10 @@ stack:
     - Docker
 
 # ---------------------------------------------------------------------------
-# Agent roles
-# Ordered by authority — listed first = highest authority for ambiguous decisions.
-# Each role needs: name, authority (comma-separated domains), description.
+# Agent targets
+# Which AI agent tools to generate files for.
 # ---------------------------------------------------------------------------
-agents:
-  roles:
-    - name: Backend Architect
-      authority: system-design, api-contracts, data-models
-      description: Designs backend systems and produces authoritative implementation plans
-    - name: Backend Developer
-      authority: backend-implementation, api-endpoints, data-access
-      description: Implements features per the architect's plan
-    - name: Frontend Developer
-      authority: ui-implementation, component-design, state-management
-      description: Implements UI components and consumes API contracts
-    - name: Staff Engineer
-      authority: code-review, quality, risk-assessment
-      description: Reviews plans and code for quality, risk, and architectural alignment
+agents: {}
 
 # ---------------------------------------------------------------------------
 # Escalation rules
@@ -387,9 +326,7 @@ principles:
 
 3. **Stack**: Only include what you actually found. Do not guess. If no databases were found, omit the `databases` field entirely.
 
-4. **Agent roles**: Use exactly the roles you determined in Phase 4, ordered by authority (highest first).
-
-5. **Escalation rules**: Always include the five standard categories. Customize the triggers based on the stack:
+4. **Escalation rules**: Always include the five standard categories. Customize the triggers based on the stack:
    - Rust project: add "Using unsafe code without architectural approval" to Architecture and Design
    - Database project: make the schema migration trigger specific (e.g., "Running migrations in production without review")
    - Auth-heavy project: expand the Security category
@@ -410,7 +347,7 @@ principles:
 
 ---
 
-### Phase 6: Confirm and Next Steps
+### Phase 5: Confirm and Next Steps
 
 After writing `specops.yaml`, tell the user:
 
@@ -437,6 +374,6 @@ and should not be manually edited.
 
 - **Read, do not execute**: Use Glob and Read tools. Do not run shell commands to discover the stack.
 - **Be honest about uncertainty**: If you cannot determine something, say so rather than guessing. Leave a `# TODO: verify this` comment in the YAML.
-- **Preserve existing conventions**: If CLAUDE.md already exists, read it carefully. Preserve any escalation rules, principles, or role conventions it defines.
-- **Don't over-engineer small projects**: A simple CLI tool or script does not need six agent roles. Match the governance complexity to the project complexity.
+- **Preserve existing conventions**: If CLAUDE.md already exists, read it carefully. Preserve any escalation rules, principles, or conventions it defines.
+- **Don't over-engineer small projects**: Match the governance complexity to the project complexity.
 - **The scan skill is framework-owned**: Do not edit `.claude/skills/specops-scan/SKILL.md` manually. It is overwritten by `specops update`. Put custom instructions in other skill files.

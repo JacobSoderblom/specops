@@ -35,21 +35,10 @@ export interface StackConfig {
 }
 
 // ---------------------------------------------------------------------------
-// Agent roles
+// Agent targets
 // ---------------------------------------------------------------------------
 
-export interface AgentRole {
-  /** Role name shown in docs and CLAUDE.md (e.g., "Backend Architect"). */
-  name: string;
-  /** Comma-separated authority domains (e.g., "system-design, api-contracts"). */
-  authority: string;
-  /** One-line description of what this role does. */
-  description: string;
-}
-
 export interface AgentsConfig {
-  /** Ordered list of agent roles. First role listed has highest authority for ambiguous decisions. */
-  roles: AgentRole[];
   /**
    * Which agent tools to generate files for.
    * Valid values: "claude" (generates CLAUDE.md + .claude/skills/), "codex" (generates AGENTS.md).

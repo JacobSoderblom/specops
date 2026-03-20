@@ -1,6 +1,6 @@
 # ExecPlan: Mechanical Governance
 
-**Status:** Draft
+**Status:** Complete
 **Branch:** feature/mechanical-governance
 **PR:** (filled when opened)
 **Author:** Claude Opus 4.6
@@ -16,7 +16,7 @@ This feature removes the roles concept entirely to produce a leaner, more focuse
 
 ## Progress
 
-- [ ] Milestone 1: Remove roles from schema, loader, templates, generators, init, and scan skill
+- [x] Milestone 1: Remove roles from schema, loader, templates, generators, init, and scan skill (2026-03-20)
 
 ## Surprises & Discoveries
 
