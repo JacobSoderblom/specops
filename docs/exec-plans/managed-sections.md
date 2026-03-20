@@ -1,6 +1,6 @@
 # ExecPlan: Managed Sections
 
-**Status:** Draft
+**Status:** Complete
 **Branch:** feature/managed-sections
 **PR:** (filled when opened)
 **Author:** Claude Opus 4.6
@@ -16,10 +16,10 @@ This feature introduces HTML comment markers (`<!-- specops:begin:section -->` /
 
 ## Progress
 
-- [ ] Milestone 1: Section parser — read and write marked regions in Markdown files
-- [ ] Milestone 2: Update CLAUDE.md generator to use managed sections
-- [ ] Milestone 3: Update AGENTS.md generator to use managed sections
-- [ ] Milestone 4: First-run behavior — generate initial file with markers when no file exists
+- [x] Milestone 1: Section parser — read and write marked regions in Markdown files (2026-03-20)
+- [x] Milestone 2: Update CLAUDE.md generator to use managed sections (2026-03-20)
+- [x] Milestone 3: Update AGENTS.md generator to use managed sections (2026-03-20)
+- [x] Milestone 4: First-run behavior — generate initial file with markers when no file exists (2026-03-20)
 
 ## Surprises & Discoveries
 

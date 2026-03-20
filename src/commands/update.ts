@@ -1,17 +1,19 @@
 /**
  * `specops update` command.
  *
- * Reads specops.yaml and regenerates all managed files. This is safe to
- * run repeatedly — it is idempotent. Files that are user-owned (like
- * individual skill SKILL.md files after initial creation) are not
- * overwritten.
+ * Reads specops.yaml and regenerates managed files. CLAUDE.md and AGENTS.md
+ * use managed sections — only content between specops markers is replaced,
+ * user content is preserved.
  *
  * Files that are always regenerated:
- * - CLAUDE.md
  * - docs/agent-context/README.md
  * - docs/agent-context/escalation-rules.md
  * - docs/agent-context/continuous-improvement.md
  * - docs/exec-plans/PLANS.md
+ *
+ * Files with managed sections (user content preserved):
+ * - CLAUDE.md
+ * - AGENTS.md
  *
  * Files created only if missing:
  * - docs/exec-plans/README.md
@@ -43,19 +45,22 @@ export async function runUpdate(projectDir?: string): Promise<void> {
   const config = await loadConfig(dir);
 
   // Track all created/updated files
-  const results: { path: string; action: "created" | "updated" }[] = [];
+  const results: {
+    path: string;
+    action: "created" | "updated" | "skipped";
+  }[] = [];
   const targets = getTargets(config);
 
   // 1. Generate CLAUDE.md (when targeting Claude)
   if (targets.includes("claude")) {
-    const claudePath = await generateClaudeMd(dir, config);
-    results.push({ path: claudePath, action: "updated" });
+    const result = await generateClaudeMd(dir, config);
+    results.push(result);
   }
 
   // 2. Generate AGENTS.md (when targeting Codex)
   if (targets.includes("codex")) {
-    const agentsPath = await generateAgentsMd(dir, config);
-    results.push({ path: agentsPath, action: "updated" });
+    const result = await generateAgentsMd(dir, config);
+    results.push(result);
   }
 
   // 3. Generate docs/agent-context/
@@ -82,18 +87,41 @@ export async function runUpdate(projectDir?: string): Promise<void> {
   const relPath = (p: string) => p.replace(dir + "/", "");
 
   for (const r of results) {
-    const icon = r.action === "created" ? chalk.green("+") : chalk.blue("~");
-    console.log(`  ${icon} ${relPath(r.path)}`);
+    if (r.action === "skipped") {
+      const icon = chalk.yellow("!");
+      console.log(
+        `  ${icon} ${relPath(r.path)} ${chalk.yellow("(no specops markers — skipped)")}`
+      );
+    } else {
+      const icon =
+        r.action === "created" ? chalk.green("+") : chalk.blue("~");
+      console.log(`  ${icon} ${relPath(r.path)}`);
+    }
+  }
+
+  const skipped = results.filter((r) => r.action === "skipped");
+  if (skipped.length > 0) {
+    console.log("");
+    console.log(
+      chalk.yellow(
+        "  Skipped files have no specops markers. Run `specops import` to add markers,"
+      )
+    );
+    console.log(
+      chalk.yellow(
+        "  or delete the file and re-run `specops update` to regenerate with markers."
+      )
+    );
   }
 
   console.log("");
   console.log(
-    chalk.green(`Done. ${results.length} files generated.`)
+    chalk.green(
+      `Done. ${results.filter((r) => r.action !== "skipped").length} files generated.`
+    )
   );
   console.log(
-    chalk.dim(
-      "Edit specops.yaml and run `specops update` to regenerate."
-    )
+    chalk.dim("Edit specops.yaml and run `specops update` to regenerate.")
   );
   console.log("");
 }

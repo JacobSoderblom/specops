@@ -109,8 +109,6 @@ resources:
           path: src/templates/exec-plan.md
         - label: Scan skill template
           path: src/templates/scan-skill.md
-        - label: CLAUDE.md template
-          path: src/templates/claude-md.hbs
 
 principles:
   items:
